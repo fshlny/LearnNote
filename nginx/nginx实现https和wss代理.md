@@ -108,7 +108,7 @@ upstream web{
 }
 server {
         listen       443 ssl;
-        server_name  localhost;
+        server_name  localhost;#此处localhost可写为域名
 
         ssl_certificate      D://devTools/nginx/nginx-1.14.0/conf/ssl/buduhuisi.crt;
         ssl_certificate_key  D://devTools/nginx/nginx-1.14.0/conf/ssl/buduhuisi.key;
@@ -119,9 +119,57 @@ server {
         ssl_prefer_server_ciphers  on;#加密
     
     
-
         location / {
             proxy_pass http://web;#代理的web服务
         }
     }
 ```
+
+在上述配置完成之后，我们就可以校验https是否可用了
+
+![](../image/https访问localhost.png)
+
+好了，在测试https可以访问代理服务器之后，我让同事使用https地址再测试一下，在我以为会一切很顺利的时候，同事告知我，连接不上WebSocket服务，纳尼，什么个情况，同事直接发了一个截图给我
+
+![](../image/WebSocket初始化失败.png)
+
+从错误日志可以看出，普通的`WebSocket`连接（`ws://`这样的地址）是不能再https加载中的网页上初始化，麻蛋，居然还有这样的坑，以为只需要搞定https就行了，结果还需要配置`wss`。只有再继续搞定`wss`配置才能交代了。在我努力的寻找下，终于找到了我想要的解决方案
+
+## WSS 配置
+
+首先我们现在配置文件中添加一下我们需要代理的WebSocket服务地址
+
+```
+#appServer
+upstream websocket_appserver{
+    #websocket后台实际地址
+    server 192.168.1.57:19837;
+}
+```
+
+接着再在刚才配置`https`的`server`内容中添加上代理配置
+
+```
+location /wss/loginserver {
+    access_log D://devTools/nginx/nginx-1.14.0/logs/come-websocket-loginserver.log;
+    proxy_pass http://websocket/; #代理到上面的地址去
+    proxy_read_timeout 60s;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real_IP $remote_addr;
+    proxy_set_header X-Forwarded-for $remote_addr;
+    proxy_http_version 1.1;#WebSocket协议中握手请求的http版本
+    proxy_set_header Upgrade $http_upgrade;#webSocket握手请求请求头
+    proxy_set_header Connection 'Upgrade';#webSocket握手请求请求头
+}
+```
+
+在配置了上述内容了，就可以验证一下配置是否正确了，这次我没有再让我的小伙伴测试了，我必须先保证我的白盒测试是ok的，不然又会返工。于是我使用`js`写了一个建议的`WebSocket`Demo，
+
+![](../image/wss连接成功.png)
+
+到这里Nginx的配置也就ok
+
+## 参考
+
+* [Nginx配置文件详解](https://www.cnblogs.com/hunttown/p/5759959.html)
+* [Nginx配置https和wss](https://www.cnblogs.com/weiyinfu/p/7389744.html)

@@ -44,3 +44,15 @@ mysql> show variables like 'log_bin_trust_function_creators';
 1 row in set
 ```
 这样就可以创建`function`了
+
+### MySQL 5.5.45+, 5.6.26+ and 5.7.6+连接成功后，提示WARN
+
+```
+WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+```
+
+根据Mysql的提示，需要在mysql连接地址上传递参数`useSSL`，并且useSSL为true,具体地址如下 
+
+```
+jdbc:mysql://127.0.0.1:3306/xxx?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=true
+```

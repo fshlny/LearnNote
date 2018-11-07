@@ -59,3 +59,31 @@ For compliance with existing applications not using SSL the verifyServerCertific
 ```
 jdbc:mysql://127.0.0.1:3306/xxx?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=true
 ```
+
+## Mysql创建用户并授权可以远程访问
+
+> 1.创建用户
+
+```
+    mysql> create user root@'%' identified by '密码';
+```
+> 2.授权
+
+```
+    mysql>GRANT ALL ON *.* TO 'root'@'%';
+    #或者
+    mysql> grant all privileges on *.* to root@'%' with grant option;
+```
+
+> 3.刷新权限
+
+```
+    mysql> FLUSH PRIVILEGES;
+```
+
+> 4.
+
+```
+    mysql>ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '密码'; 
+```
+
